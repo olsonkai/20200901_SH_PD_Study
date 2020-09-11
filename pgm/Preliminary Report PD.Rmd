@@ -1,0 +1,164 @@
+---
+title: "PD Preliminary Report"
+author: "| Analysts: Kaitlin Olson and Angela Fought \n|\n| Investigators: Samantha
+  Holden\n|\n| Report generated: `r format(Sys.Date(), '%m/%d/%Y')`\n"
+output:
+  html_document:
+    highlight: espresso
+    number_sections: yes
+    theme: yeti
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+```{r, echo=FALSE, out.width='70%', fig.show='hold'}
+knitr::include_graphics("sph_cida_wm_blk (002).png")
+```
+
+# Introduction
+
+We received one excel spreadsheet containing information about 46 individuals in a Parkinson's Disease study for their baseline visit and their follow-up visit. Our goal in this project is to explore the relationship between ??? (to come from Samantha)
+
+This report presents the descriptive statistics on the "Year1Analysis" dataset. The resulting dataset had 92 observations, two for each patient.
+
+# Methods
+
+## Data Cleaning
+
+After inspection of the demographic and expected outcome variables, there was very little missing data. Specifically, there was only one missing value for the cognitive composite score outcome.
+
+## Data Analysis
+
+We are waiting on information from Samantha to create hypotheses and an analysis plan.
+
+# Results
+
+## Descriptive Statistics
+
+There were 46 patients that had data recorded for baseline and then follow-up visits (Table 1). At baseline, the median age was 70 (64.0, 74.0) with a range of [53.0,83.0]. There were 16 females and 30 males that participated in this study. Years of education for these individuals ranged from [10,21] with a median of 18 years (16.0,18.0). The median duration of disease experienced by this sample was 3.0 years (2.0,7.8) but this ranged from [0,42]. Descriptive statistics for possible outcome variables at both baseline and follow-up visits are provided in Table 1. Additionally, there were 11 patients that experienced a change in cognitive classification between baseline and follow-up. The changes of classification for these patients can be found in Table 2.
+
+```{r,echo=FALSE}
+#read data in
+pd <- read.csv("/Users/olsonkai/Desktop/Year1Analysis.csv")
+```
+
+# make spaghetti plots
+
+### Angela's number : 734 - 277 - 0926
+
+```{r,echo=FALSE}
+#length(unique(pd$redcap_id))
+#####demographics
+age <- pd$demo_age
+sex <- pd$demo_sex #0 female, 1 male
+education <- pd$demo_ed
+dis.duration <- pd$demo_disdur #disease duration
+
+#####outcomes (totals)
+upsa.tot <- pd$upsa_totalscore #combines financial,communication,comprehension,transportation,household management
+pdaq.tot <- pd$pdaq_total #difficulty with daily tasks -- reading,time,instructions,discussion,memory
+pdcfrs.tot <- pd$pdcfrs_total #more daily tasks -- money,organization,transportation,understanding
+updrs.tot <- pd$updrs_total #motor skill questions
+moca.tot <- pd$moca_total #executive,naming,attention,language,memory
+drs.tot <- pd$drs2_grandtotal #test unsure of what
+aes.score <- pd$aes_score #mental health
+pdq.tot <- pd$pdq_tot #mobility,emotional,social support,cognition,communication,stigma,bodily discomfort
+comp.tot <- pd$comp_tot #cognitive composite score
+cog.class <- pd$cogclass_list #cognitive classification
+cog.conv <- pd$cogconv #cognitive conversion from previous visit
+
+#####outcomes (other forms)
+upsa.z <- pd$upsa_zscore
+upsa.base <- pd$upsa_baseline
+upsa.change <- pd$upsa_change
+pdaq.change <- pd$pdaq_change
+pdcfrs.change <- pd$pdcfrs_change
+updrs.change <- pd$updrs_change
+moca.change <- pd$moca_change
+drs.change <- pd$drs2_change
+```
+
+### Table 1. Summary statistics for study participants.
+```{r, results="asis",echo=FALSE}
+library(arsenal)
+
+#####demographics
+visit <- pd$visit #0 baseline, 1 followup
+age <- pd$demo_age
+sex <- pd$demo_sex #0 female, 1 male
+education <- pd$demo_ed
+dis.duration <- pd$demo_disdur #disease duration
+
+#####outcomes (totals)
+upsa.tot <- pd$upsa_totalscore #combines financial,communication,comprehension,transportation,household management
+pdaq.tot <- pd$pdaq_total #difficulty with daily tasks -- reading,time,instructions,discussion,memory
+pdcfrs.tot <- pd$pdcfrs_total #more daily tasks -- money,organization,transportation,understanding
+updrs.tot <- pd$updrs_total #motor skill questions
+moca.tot <- pd$moca_total #executive,naming,attention,language,memory
+drs.tot <- pd$drs2_grandtotal #test unsure of what
+aes.score <- pd$aes_score #mental health
+pdq.tot <- pd$pdq_tot #mobility,emotional,social support,cognition,communication,stigma,bodily discomfort
+comp.tot <- pd$comp_tot #cognitive composite score
+cog.class <- pd$cogclass_list #cognitive classification
+cog.conv <- pd$cogconv #cognitive conversion from previous visit
+ 
+#changing factor level labels prior to table construction
+sex <- factor(pd$demo_sex,
+              labels=c("Female","Male"))
+visit <-factor(pd$visit,
+               labels=c("Baseline","Follow-Up"))
+cog.class <- factor(pd$cogclass_list,
+                    labels=c("Normal Cognition","PD-MCI","PDD"))
+cog.conv <- factor(pd$cogconv,
+                   labels = c("No","Yes"))
+
+#selecting how I want categorical/numeric data displayed #digits is significant figures
+mycontrols  <- tableby.control(numeric.stats=c("Nmiss","medianq1q3","range"),
+                               cat.stats=c("Nmiss","countpct"),
+                               stats.labels=list(Nmiss='N Missing',medianq1q3='Median (Q1,Q3)', range='Range'),
+                               digits=1,test = FALSE,total=FALSE)
+ 
+#actual function to create table #demo_sex before ~ splits it by sex
+table1 = tableby(visit~ age + sex + education + dis.duration + upsa.tot + pdaq.tot + pdcfrs.tot + updrs.tot + moca.tot + drs.tot + aes.score + pdq.tot + comp.tot, control = mycontrols)
+ 
+#labels for table
+mylabels <- list(age = "Age (Years)",sex="Sex",education="Education (Years)",dis.duration="Disease Duration (Years)",upsa.tot="UPSA-2 Total Score",pdaq.tot="PDAQ Total Score",pdcfrs.tot="PD-CFRS Total Score",updrs.tot="UPDRS Part III Total Score",moca.tot="MoCa Total Score",drs.tot="Total DRS Raw Score",aes.score="AES-C Total Score",pdq.tot="Total PDQ-39 Score",comp.tot="Cognitive Composite Score")
+ 
+#displays table with labels and title
+summary(table1, labelTranslations = mylabels)
+```
+
+### Table 2. Cognitive classification changes that happened from baseline to follow-up.
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(kableExtra)
+
+#select for patients who had their cognitive classification change from baseline to followup
+cog.change <- pd[pd$cogconv==1,c("redcap_id","cogclass_list")]
+cog.change <- na.omit(cog.change)
+cog.change <- subset(pd, redcap_id %in% c(cog.change$redcap_id))
+cog.change$cog.class <- as.factor(cog.change$cogclass_list)
+cog.change <- select(cog.change, c(visit,redcap_id,cog.class))
+levels(cog.change$cog.class) <- c("Normal Cognition","PD-MCI","PDD")
+
+#make table with 1 row for each patient
+base.cog <- cog.change[cog.change$visit==0,]
+fu.cog <- cog.change[cog.change$visit==1,]
+cog.table <- left_join(base.cog,fu.cog,by="redcap_id")[,c(2,3,5)]
+
+#make table of pre and post cognitive classifications
+colnames(cog.table) <- c("Patient ID","Baseline Cognitive Class.","Follow-Up Cognitive Class.")
+kable(cog.table) %>%
+  kable_styling(bootstrap_options = "striped",full_width = FALSE)
+```
+
+<!-- footer -->
+
+---
+
+```{r, echo=FALSE, out.width='70%', fig.show='hold'}
+knitr::include_graphics("sph_cida_wm_blk (002).png")
+```
